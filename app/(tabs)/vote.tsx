@@ -23,7 +23,7 @@ export default function VoteScreen() {
     const votedOnThis = useAppStore.getState().votedVideoIdsByUser[userId]?.has(item.id);
     return (
       <Card style={styles.card}>
-        <Card.Cover source={require('../../assets/videos/placeholder-video.jpg')} />
+        <Card.Cover source={require('../../assets/france-in-pictures-beautiful-places-to-photograph-eiffel-tower.jpg')} />
         <Card.Title title={item.user} subtitle={item.caption} />
         <Card.Content>
           <Text variant="bodyMedium">Votes: {item.votes}</Text>

@@ -15,7 +15,7 @@ export default function HomeScreen() {
         Today’s Challenge
       </Text>
       <Card style={styles.card}>
-        <Card.Cover source={challenge?.image ? challenge.image : require('../../assets/challenges/sprint.png')} />
+        <Card.Cover source={challenge?.image} />
         <Card.Content>
           <Text variant="titleLarge" style={{ marginTop: 8 }}>
             {challenge?.title}

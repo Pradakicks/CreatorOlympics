@@ -11,7 +11,7 @@ export default function UploadScreen() {
   const [snack, setSnack] = useState(false);
 
   const onSubmit = () => {
-    submitVideo(caption, 'assets/videos/placeholder-video.jpg');
+    submitVideo(caption, 'assets/france-in-pictures-beautiful-places-to-photograph-eiffel-tower.jpg');
     setSnack(true);
     setTimeout(() => {
       router.replace('/(tabs)');
@@ -21,7 +21,7 @@ export default function UploadScreen() {
   return (
     <View style={styles.container}>
       <Text variant="headlineSmall" style={{ marginBottom: 12 }}>Upload Mock Video</Text>
-      <Image source={require('../assets/videos/placeholder-video.jpg')} style={styles.thumb} />
+      <Image source={require('../assets/france-in-pictures-beautiful-places-to-photograph-eiffel-tower.jpg')} style={styles.thumb} />
       <TextInput
         label="Caption"
         value={caption}
