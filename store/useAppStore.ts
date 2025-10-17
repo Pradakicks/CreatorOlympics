@@ -1,6 +1,19 @@
 import { create } from 'zustand';
 import { challenges as sampleChallenges } from '../data/challenges';
 
+function randomUser(): string {
+  const first = ['Ava','Liam','Mia','Noah','Zoe','Ethan','Ivy','Kai','Luna','Milo','Nina','Owen'];
+  const last = ['Runner','Jumper','Archer','Sprinter','Diver','Rower','Skater','Climber','Boxer','Swimmer'];
+  const f = first[Math.floor(Math.random()*first.length)];
+  const l = last[Math.floor(Math.random()*last.length)];
+  const num = Math.floor(10 + Math.random()*89);
+  return `${f}${l}${num}`;
+}
+
+function randomVotes(): number {
+  return Math.floor(Math.random()*50); // 0-49
+}
+
 export type Challenge = {
   id: string;
   title: string;
@@ -13,7 +26,7 @@ export type Video = {
   id: string;
   user: string;
   caption: string;
-  videoUrl: string;
+  videoUrl: any; // require(...) module for local assets or remote URI
   votes: number;
 };
 
@@ -24,7 +37,8 @@ type AppState = {
   videos: Video[];
   votesUsedToday: Record<string, number>;
   votedVideoIdsByUser: Record<string, Set<string>>;
-  submitVideo: (caption: string, videoUrl: string) => void;
+  seedLocalVideos: () => void;
+  submitVideo: (caption: string, videoUrl: any) => void;
   canVote: (videoId: string) => boolean;
   vote: (videoId: string) => void;
   topVideos: (limit?: number) => Video[];
@@ -38,7 +52,36 @@ export const useAppStore = create<AppState>((set, get) => ({
   votesUsedToday: {},
   votedVideoIdsByUser: {},
 
-  submitVideo: (caption: string, videoUrl: string) => {
+  seedLocalVideos: () => {
+    const existing = get().videos;
+    if (existing.length > 0) return; // seed once per session
+    const seeded: Video[] = [
+      {
+        id: 'v1',
+        user: randomUser(),
+        caption: 'Training day grind 💪',
+        videoUrl: require('../assets/videos/videoblocks-144z_trip_drone_154_h_ghcnhnin__dd5a38ed0ad749bd851e95e26be07732__P360.mp4'),
+        votes: randomVotes(),
+      },
+      {
+        id: 'v2',
+        user: randomUser(),
+        caption: 'Focus and form 🎯',
+        videoUrl: require('../assets/videos/videoblocks-653165228815972af31ef4f9_hhwpk30gt__842cba157a9d3f450f3b85de5ff09b94__P360.mp4'),
+        votes: randomVotes(),
+      },
+      {
+        id: 'v3',
+        user: randomUser(),
+        caption: 'Leg day to gold day 🥇',
+        videoUrl: require('../assets/videos/videoblocks-school-of-fish-sharks-swim-in-a-circle_smleuo42x__ae0948b48456559f121e6125f162592c__P360.mp4'),
+        votes: randomVotes(),
+      },
+    ];
+    set({ videos: seeded });
+  },
+
+  submitVideo: (caption: string, videoUrl: any) => {
     const { userId } = get();
     const newVideo: Video = {
       id: `${Date.now()}`,

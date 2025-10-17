@@ -1,42 +1,52 @@
-import React, { useMemo, useState } from 'react';
-import { View, Image, FlatList, StyleSheet } from 'react-native';
-import { Button, Card, Text, Snackbar, Badge } from 'react-native-paper';
+import React, { useEffect, useState } from 'react';
+import { View, FlatList, StyleSheet, Dimensions } from 'react-native';
+import { Button, Text, Snackbar, Badge, FAB, useTheme } from 'react-native-paper';
 import { Link } from 'expo-router';
 import { useAppStore } from '../../store/useAppStore';
+import { Video } from 'expo-av';
 
 export default function VoteScreen() {
-  const { videos, vote, canVote, userId, votesUsedToday } = useAppStore();
+  const theme = useTheme();
+  const { videos, vote, canVote, userId, votesUsedToday, seedLocalVideos } = useAppStore();
   const [snackbar, setSnackbar] = useState<string | null>(null);
+  const screenH = Dimensions.get('window').height;
 
   const remaining = 10 - (votesUsedToday[userId] || 0);
 
-  const handleVote = (id: string) => {
-    if (!canVote(id)) {
-      setSnackbar('Vote limit reached or already voted on this video.');
-      return;
-    }
-    vote(id);
-    setSnackbar('Voted!');
-  };
+  useEffect(() => {
+    seedLocalVideos();
+  }, [seedLocalVideos]);
 
   const renderItem = ({ item }: any) => {
     const votedOnThis = useAppStore.getState().votedVideoIdsByUser[userId]?.has(item.id);
     return (
-      <Card style={styles.card}>
-        <Card.Cover source={require('../../assets/france-in-pictures-beautiful-places-to-photograph-eiffel-tower.jpg')} />
-        <Card.Title title={item.user} subtitle={item.caption} />
-        <Card.Content>
-          <Text variant="bodyMedium">Votes: {item.votes}</Text>
-        </Card.Content>
-        <Card.Actions>
-          <Button mode="contained" onPress={() => handleVote(item.id)} disabled={votedOnThis || remaining <= 0}>
-            👍 Vote
-          </Button>
-          <View style={{ marginLeft: 8 }}>
-            <Badge>{remaining}/10</Badge>
-          </View>
-        </Card.Actions>
-      </Card>
+      <View style={[styles.page, { height: screenH }]}> 
+        <Video
+          source={item.videoUrl}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          isLooping
+          shouldPlay
+          isMuted
+        />
+        <View style={styles.bottomLeft}>
+          <Text variant="titleMedium" style={styles.textWhite}>@{item.user}</Text>
+          <Text variant="bodyLarge" style={styles.textWhite}>{item.caption}</Text>
+        </View>
+        <View style={styles.rightStack}>
+          <FAB
+            icon="thumb-up"
+            onPress={() => {
+              if (!canVote(item.id)) { setSnackbar('Vote limit reached or already voted'); return; }
+              vote(item.id); setSnackbar('Voted!');
+            }}
+            disabled={votedOnThis || remaining <= 0}
+            style={[styles.fab, { backgroundColor: votedOnThis ? theme.colors.tertiary : theme.colors.primary }]}
+            color={'white'}
+          />
+          <Badge style={styles.badge}>{item.votes}</Badge>
+        </View>
+      </View>
     );
   };
 
@@ -52,18 +62,19 @@ export default function VoteScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: 'black' }}>
       <FlatList
         data={videos}
         keyExtractor={(v) => v.id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 16, gap: 12 }}
+        pagingEnabled
+        snapToInterval={screenH}
+        decelerationRate="fast"
+        snapToAlignment="start"
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews
       />
-      <View style={styles.footer}>
-        <Link href="/(tabs)/leaderboard" asChild>
-          <Button mode="outlined">See Finalists</Button>
-        </Link>
-      </View>
+      <View style={styles.footer} />
       <Snackbar visible={!!snackbar} onDismiss={() => setSnackbar(null)} duration={2000}>
         {snackbar}
       </Snackbar>
@@ -72,10 +83,14 @@ export default function VoteScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  card: { marginBottom: 12, borderRadius: 12, overflow: 'hidden', marginHorizontal: 16 },
+  page: { justifyContent: 'flex-end' },
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  footer: { position: 'absolute', bottom: 16, left: 16, right: 16 },
+  bottomLeft: { position: 'absolute', left: 16, bottom: 72, right: 96 },
+  rightStack: { position: 'absolute', right: 16, bottom: 100, alignItems: 'center' },
+  textWhite: { color: 'white' },
+  fab: { marginBottom: 8 },
+  badge: { alignSelf: 'center' },
+  footer: { position: 'absolute', bottom: 16, left: 16, right: 16, flexDirection: 'row', alignItems: 'center' },
 });
 
 
